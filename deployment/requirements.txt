@@ -1,0 +1,100 @@
+# Core Dependencies for Ligand-Receptor Binding Prediction
+# ========================================================
+# Exact versions for 100% reproducibility
+
+# Core scientific computing
+numpy==2.3.0
+pandas==2.3.0
+scipy==1.15.3
+scikit-learn==1.7.0
+matplotlib==3.10.3
+seaborn==0.13.2
+
+# Machine Learning & Deep Learning
+torch==2.5.1
+torchvision==0.20.1
+torchaudio==2.5.1
+torch-geometric==2.6.1
+
+# Molecular and biochemical libraries
+rdkit==2025.3.3
+biopandas==0.5.1
+biotite==1.3.0
+
+# Interpretability and visualization
+shap==0.46.0
+tqdm==4.67.1
+
+# Data processing and utilities
+joblib==1.5.1
+pathlib2==2.3.7
+typing-extensions==4.14.0
+
+# Testing and development
+pytest==8.3.4
+pytest-cov==6.0.0
+pytest-mock==3.14.0
+
+# Jupyter and interactive development
+jupyter==1.1.1
+ipykernel==6.29.5
+notebook==7.3.1
+
+# Logging and monitoring
+tensorboard==2.18.0
+psutil==7.0.0
+
+# Networking and web utilities
+requests==2.32.4
+urllib3==2.2.3
+
+# Image and plotting dependencies
+pillow==11.2.1
+fonttools==4.58.4
+kiwisolver==1.4.8
+cycler==0.12.1
+pyparsing==3.2.3
+
+# Date and time handling
+python-dateutil==2.9.0.post0
+pytz==2025.2
+
+# File and data format handling
+packaging==25.0
+setuptools>=65.5.0
+
+# Optional GPU monitoring (if available)
+pynvml==11.5.3
+
+# Additional molecular analysis tools
+networkx==3.5
+msgpack==1.1.1
+contourpy==1.3.2
+
+# Security and cryptography
+certifi==2025.6.15
+charset-normalizer==3.4.2
+idna==3.10
+
+# Multi-processing and concurrency
+filelock==3.18.0
+fsspec==2025.5.1
+
+# Probability and statistics
+looseversion==1.1.2
+
+# Web scraping and HTTP (for data collection)
+aiohttp==3.12.13
+aiohappyeyeballs==2.6.1
+aiosignal==1.3.2
+attrs==25.3.0
+frozenlist==1.7.0
+multidict==6.5.0
+propcache==0.3.2
+
+# Symbolic mathematics (for theoretical analysis)
+sympy==1.13.1
+mpmath==1.3.0
+
+# Threading and parallel processing
+threadpoolctl==3.6.0 
