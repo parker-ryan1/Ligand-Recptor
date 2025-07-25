@@ -7,16 +7,7 @@
 [![CUDA](https://img.shields.io/badge/CUDA-12.1-green.svg)](https://developer.nvidia.com/cuda-toolkit)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> **Elite-tier publication-ready research** achieving **100% publication readiness** with **$710M+ projected pharmaceutical impact** and **1,462% performance improvement** over baseline methods.
 
-## 🎯 **Key Achievements**
-
-- **🏆 100% Publication Readiness** - Qualified for Nature, Science, Nature Methods
-- **⚡ 1,462% Performance Improvement** - R² = 0.7465 vs baseline 0.051  
-- **💰 $710M+ Commercial Impact** - Projected annual pharmaceutical savings
-- **🚀 100x+ GPU Acceleration** - Scalable to 19,000+ molecular complexes
-- **🔬 Bayesian Uncertainty** - Reliable confidence estimates for drug discovery
-- **📊 Comprehensive Validation** - Experimental-like data + 6 baseline comparisons
 
 ## 📖 **Abstract**
 
