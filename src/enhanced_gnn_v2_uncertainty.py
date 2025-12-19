@@ -22,21 +22,18 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import mean_absolute_error, r2_score
 import warnings
+import logging
 warnings.filterwarnings('ignore')
+
+# Configure logging instead of print statements
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 # Advanced imports for uncertainty and interpretability
 import torch.distributions as dist
 from torch.nn import Parameter
 import math
 from typing import Tuple, Dict, List, Optional
-
-print("🧠 **ENHANCED GNN v2 - UNCERTAINTY QUANTIFICATION**")
-print("="*70)
-print("🎯 Target: 100% Publication Readiness")
-print("⚡ New Features: Bayesian Neural Networks, Monte Carlo Dropout")
-print("🔍 Interpretability: Molecular SHAP Analysis")
-print("📊 Uncertainty: Prediction Confidence Intervals")
-print("="*70)
 
 class BayesianLinear(nn.Module):
     """Bayesian Linear Layer with weight uncertainty."""
@@ -158,13 +155,13 @@ class EnhancedGNNv2(nn.Module):
         self.use_bayesian = use_bayesian
         self.mc_samples = mc_samples
         
-        print(f"🏗️ Building Enhanced GNN v2:")
-        print(f"   • Ligand input: {ligand_dim}")
-        print(f"   • Protein input: {protein_dim}")
-        print(f"   • Interaction input: {interaction_dim}")
-        print(f"   • Hidden dimension: {hidden_dim}")
-        print(f"   • Bayesian layers: {use_bayesian}")
-        print(f"   • MC samples: {mc_samples}")
+        logger.info(f"Building Enhanced GNN v2:")
+        logger.info(f"   • Ligand input: {ligand_dim}")
+        logger.info(f"   • Protein input: {protein_dim}")
+        logger.info(f"   • Interaction input: {interaction_dim}")
+        logger.info(f"   • Hidden dimension: {hidden_dim}")
+        logger.info(f"   • Bayesian layers: {use_bayesian}")
+        logger.info(f"   • MC samples: {mc_samples}")
         
         # Ligand encoder with Bayesian layers
         if use_bayesian:
@@ -259,7 +256,7 @@ class EnhancedGNNv2(nn.Module):
         self._initialize_weights()
         
         total_params = sum(p.numel() for p in self.parameters())
-        print(f"   • Total parameters: {total_params:,}")
+        logger.info(f"   • Total parameters: {total_params:,}")
     
     def _initialize_weights(self):
         """Initialize non-Bayesian weights."""
@@ -292,32 +289,39 @@ class EnhancedGNNv2(nn.Module):
                                 protein_features: torch.Tensor, 
                                 interaction_features: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """Predict with uncertainty estimation using Monte Carlo sampling."""
-        self.train()  # Enable dropout for MC sampling
+        # Store original training state
+        training_state = self.training
         
-        predictions = []
-        
-        for _ in range(self.mc_samples):
-            with torch.no_grad():
-                pred = self.forward(ligand_features, protein_features, interaction_features)
-                predictions.append(pred)
-        
-        predictions = torch.stack(predictions, dim=0)
-        
-        # Calculate mean and uncertainty
-        mean_pred = torch.mean(predictions, dim=0)
-        uncertainty = torch.std(predictions, dim=0)
-        
-        return mean_pred, uncertainty
+        try:
+            self.train()  # Enable dropout for MC sampling
+            
+            predictions = []
+            
+            for _ in range(self.mc_samples):
+                with torch.no_grad():
+                    pred = self.forward(ligand_features, protein_features, interaction_features)
+                    predictions.append(pred)
+            
+            predictions = torch.stack(predictions, dim=0)
+            
+            # Calculate mean and uncertainty
+            mean_pred = torch.mean(predictions, dim=0)
+            uncertainty = torch.std(predictions, dim=0)
+            
+            return mean_pred, uncertainty
+        finally:
+            # Restore original training state
+            self.train(training_state)
     
     def get_kl_divergence(self) -> torch.Tensor:
         """Get total KL divergence from Bayesian layers."""
         if not self.use_bayesian:
-            return torch.tensor(0.0)
+            return torch.tensor(0.0, dtype=torch.float32)
         
-        kl_div = 0.0
+        kl_div = torch.tensor(0.0, dtype=torch.float32)
         for module in self.modules():
             if isinstance(module, BayesianLinear):
-                kl_div += module.kl_divergence()
+                kl_div = kl_div + module.kl_divergence()
         
         return kl_div
 
@@ -340,9 +344,11 @@ class UncertaintyLoss(nn.Module):
         # KL divergence for Bayesian layers
         kl_loss = model.get_kl_divergence()
         
-        # Variance regularization
+        # Variance regularization with more stable formulation
+        # Use log(1 + variance) instead of exp(-variance)
         pred_var = torch.var(predictions)
-        variance_penalty = torch.exp(-pred_var / 0.5)
+        pred_var = torch.clamp(pred_var, min=1e-6)  # Avoid log(0)
+        variance_penalty = torch.log1p(pred_var)  # More numerically stable
         
         # Total loss
         total_loss = (regression_loss + 
@@ -360,15 +366,15 @@ class UncertaintyLoss(nn.Module):
 
 def load_enhanced_dataset():
     """Load the enhanced dataset with all features."""
-    print("📂 Loading enhanced dataset...")
+    logger.info("Loading enhanced dataset...")
     
     # Use the existing enhanced dataset from previous training
     enhanced_path = Path("results/enhanced_accuracy_training/enhanced_results.json")
     if enhanced_path.exists():
-        print("✅ Found existing enhanced results")
+        logger.info("Found existing enhanced results")
         
     # Generate enhanced dataset with all features
-    print("🧪 Generating comprehensive dataset...")
+    logger.info("Generating comprehensive dataset...")
     
     data = []
     np.random.seed(42)
@@ -484,7 +490,8 @@ def train_uncertainty_model(train_loader, val_loader, device, num_epochs=50):
     }
     
     best_val_loss = float('inf')
-    best_model_state = None
+    best_model_path = Path("results/enhanced_v2_uncertainty/checkpoint_best.pth")
+    best_model_path.parent.mkdir(parents=True, exist_ok=True)
     patience_counter = 0
     max_patience = 15
     
@@ -578,7 +585,7 @@ def train_uncertainty_model(train_loader, val_loader, device, num_epochs=50):
         # Early stopping and best model saving
         if val_loss < best_val_loss:
             best_val_loss = val_loss
-            best_model_state = model.state_dict().copy()
+            torch.save(model.state_dict(), best_model_path)
             patience_counter = 0
         else:
             patience_counter += 1
@@ -602,9 +609,9 @@ def train_uncertainty_model(train_loader, val_loader, device, num_epochs=50):
     print(f"   • Final validation R²: {history['val_r2'][-1]:.4f}")
     print(f"   • Final uncertainty: {history['uncertainty_mean'][-1]:.3f}")
     
-    # Load best model
-    if best_model_state:
-        model.load_state_dict(best_model_state)
+    # Load best model from checkpoint
+    if best_model_path.exists():
+        model.load_state_dict(torch.load(best_model_path))
         print("   • Loaded best model checkpoint")
     
     return model, history
